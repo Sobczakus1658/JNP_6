@@ -1,0 +1,53 @@
+//Autor: Franciszek Sulima
+
+
+List<Player> players (Najlepiej cykliczne)
+size_t numPlayers
+List<Field> fields
+Scoreboard scoreboard
+List<Die> dice (no liczba mnoga nie wiem czy dices)
+
+goBankrupt(Player) - wypisuje gracza jako bankruta do scoreboard i usuwa go z listy graczy
+writePlayer(Player) - wypisuje gracza do scoreboard
+
+
+Player:
+-state (w grze, czeka, bankrut - maybe, bo to chyba wypisujemy tylko raz więc może niekoniecznie musimy mieć ten stan)
+	Może zatem po prostu int howMuchWainting, jak zero to w grze jak >0 to *** czekanie howMuchWaiting ***, a jak ktoś
+	zbankrutuje to będziemy go usuwać z listy players i w onTurn dawać *** bankrut ***
+-hasGoneBankrupt - bool  można go jednorazowo zmienić na tak żeby wiedzieć że chcemy wykonać goBankrupt() a nie writePlayer()
+-playerName - String
+-wallet - size_t
+-currField - Field
+
+
+Field:
+-name - String
+-passingAction(Player)
+-landingAction(Player)
+
+Podklasy Field:
+	Game	
+		moneyOnField
+		override passiveAction(Player)
+		override activeAction(Player)
+	SeasonBegin
+		override passiveAction(Player)
+		override activeAction(Player)
+	RestDay
+	YellowCard
+		suspensionTime
+		override passiveAction(Player)
+		override activeAction(Player)
+	Goal
+		payment
+		override activeAction(Player)
+	BukmachierTyleŻePoAngielsku
+		wonBetVal
+		lostBetVal
+		override activeAction(Player)
+		UWAGA: to trzeba jakoś sprytnie zrobić nie mam od razu pomysłu na to
+	Penalty
+		penalty
+		override activeAction(Player)
+	
