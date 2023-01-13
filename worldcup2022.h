@@ -3,10 +3,13 @@
 #include <vector>
 #include <stdbool.h>
 
+class Player;
+class Field;
+
 enum state{
     inGame,
-    waiting,
-    bankrupt
+    waiting
+    //, bankrupt //Myśle ze to wywalamy bo to nic nie daje nam, tylko przeszkadza
 };
 
 /* nie wiem czy to jest potrzebne
@@ -15,17 +18,15 @@ w sensie tak i tak potrzebujesz wiedziec ile czekasz
 class Player {
     private : 
         std::string const name;
-        Field currentlyField;
+        std::shared_ptr<Field> currentlyField;
         size_t wallet = 1000;
         state statement;
         int howManyWaiting;
-        void setBankrupt(){
-
-        }
+        bool isBankrupt;
 
     public:
-        Player( std::string const &name) : name(name) {}
-        bool takeMoney(size_t fee){
+        Player(std::string const &name) : name(name), isBankrupt(false) {}
+        bool takeMoney(size_t fee) {
             if(wallet >= fee){
                 wallet = wallet - fee;
                 return true;
@@ -40,11 +41,16 @@ class Player {
         void setFine(int fine){
             howManyWaiting = fine;
         }
+        void setBankrupt(){
+            isBankrupt = true;
+        }
 };
 
-class Field { 
-    protected: 
+class Field {
+    protected:
         std::string const name;
+        Field(std::string const name) :
+                name(name) {}
     public:
         virtual void passingAction(Player player){}
         virtual void landingAction(Player player){}
@@ -52,28 +58,38 @@ class Field {
 
 class Match : public virtual Field {
     protected:
-        double weighted;
-        size_t fee;
+        const double weight;
+        const size_t fee;
         size_t prize;
     public:
-        void passingAction(Player player){
+        Match(std::string const name, double w, size_t f, size_t p):
+            Field(name),
+            weight(w),
+            fee(f),
+            prize(p) {}
+        void passingAction(Player player) override {
             if(player.takeMoney(fee)){
                 prize = prize + fee;
             }
         }
-        void landingAction(Player player){
-            player.addMoney(prize * weighted);
+        void landingAction(Player player) override {
+            player.addMoney(prize * weight);
         }
 };
 
 class SeasonBegin : public virtual Field {
     private:
         size_t passBonus = 50;
-    public: 
-        void passingAction(Player player){
+    public:
+        SeasonBegin(std::string const name, size_t pB):
+            Field(name),
+            passBonus(pB) {}
+
+        void passingAction(Player player) override {
             player.addMoney(passBonus);
         }
-        void landingAction(Player player){
+
+        void landingAction(Player player) override {
             // tu się nic nie dzieje chyba
         }
 };
@@ -82,10 +98,14 @@ class Penalty : public virtual Field {
     private:
         size_t fee;
     public :
-        void passingAction(Player player){
+        Penalty(std::string const name, size_t f):
+            Field(name),
+            fee(f) {}
+
+        void passingAction(Player player) override {
             //nic się nie dzieje
         }
-        void landingAction(Player player){
+        void landingAction(Player player) override {
             player.takeMoney(fee);
         }
 };
@@ -93,24 +113,31 @@ class Penalty : public virtual Field {
 class Goal : public virtual Field {
     private:
         size_t prize;
-    public:    
-        void passingAction(Player player){
+    public:
+        Goal(std::string const name, size_t p):
+            Field(name),
+            prize(p) {}
+        void passingAction(Player player) override {
             // nic się nie dzieje
         }
-        void landingAction(Player player){  
+        void landingAction(Player player) override {
             player.addMoney(prize);
         }
 };
 
 class YellowCard : public virtual Field {
     private:
-        int suspension;
-    void passingAction(Player player){
-        //nic się nie dzieje
-    }
-    void landingAction(Player player){
-        player.setFine(suspension);
-    }
+        uint64_t suspension;
+    public:
+        YellowCard(std::string const name, uint64_t susp):
+            Field(name),
+            suspension(susp) {}
+        void passingAction(Player player) override {
+            //nic się nie dzieje
+        }
+        void landingAction(Player player) override {
+            player.setFine(suspension);
+        }
 };
 
 class Bookmaker : public virtual Field {
@@ -120,10 +147,10 @@ class Bookmaker : public virtual Field {
         size_t prize;
         int playerCycle = 3; //nie wiem jak to nazwac =
     public:
-        void passingAction(Player player){
+        void passingAction(Player player) override {
             //nic się nie dzieje
         }
-        void landingAction(Player player){
+        void landingAction(Player player) override {
             if(player_counter % playerCycle == 0){
                 player.addMoney(prize);
             }
@@ -141,7 +168,7 @@ class WorldCup2022 : public WorldCup{
     private :
         std::list<Player> players; //chcesz cykliczną listę, nie wiem nie do końca o co chodzi
         std::shared_ptr<ScoreBoard> scoreboard;
-        std::vector<std::shared_ptr<Die> > dices;
+        std::vector< std::shared_ptr<Die> > dices;
         class Board;
         
 public:
@@ -157,6 +184,9 @@ public:
         for( int i = 0; i < dices.size(); i++){
             if(dices[i].unique()){
                 //gameDie.~die();
+                // ?! Mieliśmy nie wywoływać jawnie destruktorów co tu się dzieje?
+                //przecież wystarczy że stracisz wskaźnik na to skoro to jest sharedptr i to się samo usunie
+                //i swoją drogą nie wiem co tu chcesz uzyskać
             }
         }
     }
