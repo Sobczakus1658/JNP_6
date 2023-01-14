@@ -229,18 +229,18 @@ class Board {
 
         Board():
         fields() {
-            fields.push_back(std::make_shared<SeasonBegin>("początek sezonu", 50));
-            fields.push_back(std::make_shared<Match>("mecz z San Marino", 1, 160));
-            fields.push_back(std::make_shared<RestDay>("dzień wolny od treningu"));
-            fields.push_back(std::make_shared<Match>("mecz z Liechtensteinem", 1, 220));
-            fields.push_back(std::make_shared<YellowCard>("żółta kartka", 3));
-            fields.push_back(std::make_shared<Match>("mecz z Meksykiem", 2.5, 300));
-            fields.push_back(std::make_shared<Match>("mecz z Arabią Saudyjską", 2.5, 280));
-            fields.push_back(std::make_shared<Bookmaker>("bukmacher", 100, 100));
-            fields.push_back(std::make_shared<Match>("mecz z Argentyną", 2.5, 250));
-            fields.push_back(std::make_shared<Goal>("gol", 120));
-            fields.push_back(std::make_shared<Match>("mecz z Francją", 5, 400));
-            fields.push_back(std::make_shared<Penalty>("rzut karny", 180));
+            fields.push_back(std::make_shared<SeasonBegin>("Początek sezonu", 50));
+            fields.push_back(std::make_shared<Match>("Mecz z San Marino", 1, 160));
+            fields.push_back(std::make_shared<RestDay>("Dzień wolny od treningu"));
+            fields.push_back(std::make_shared<Match>("Mecz z Liechtensteinem", 1, 220));
+            fields.push_back(std::make_shared<YellowCard>("Żółta kartka", 3));
+            fields.push_back(std::make_shared<Match>("Mecz z Meksykiem", 2.5, 300));
+            fields.push_back(std::make_shared<Match>("Mecz z Arabią Saudyjską", 2.5, 280));
+            fields.push_back(std::make_shared<Bookmaker>("Bukmacher", 100, 100));
+            fields.push_back(std::make_shared<Match>("Mecz z Argentyną", 2.5, 250));
+            fields.push_back(std::make_shared<Goal>("Gol", 120));
+            fields.push_back(std::make_shared<Match>("Mecz z Francją", 5, 400));
+            fields.push_back(std::make_shared<Penalty>("Rzut karny", 180));
 
         }
 
@@ -332,9 +332,7 @@ class WorldCup2022 : public WorldCup {
                 scoreboard->onRound(roundNo);
                 for (std::shared_ptr<Player> player : players) {
                     //czeka
-                    if (player->skipsTurn()) {
-                        player->waitOneTurn();
-                    } else if (!player->getIsBankrupt()) {
+                    if (!player->getIsBankrupt() && !player->skipsTurn()) {
                         //gra
                         unsigned int roll = 0;
                         for (const std::shared_ptr<Die>& die: dices) {
@@ -354,8 +352,14 @@ class WorldCup2022 : public WorldCup {
                             board[player->getCurrField()]->landingAction(player.get());
                         }
                     }
-                    if (!player->getIsBankrupt())
+
+                    if (!player->getIsBankrupt()) {
                         player->writeScore(scoreboard, board[player->getCurrField()]->getName());
+                    }
+
+                    if (player->skipsTurn()) {
+                        player->waitOneTurn();
+                    }
 
                     if (bankruptNumber == players.size() - 1) {
                         for (std::shared_ptr<Player> p : players) {
