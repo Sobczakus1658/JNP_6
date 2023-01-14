@@ -58,6 +58,10 @@ public:
         return name;
     }
 
+    unsigned int getWallet() const {
+        return wallet;
+    }
+
     void setBankrupt() {
         isBankrupt = true;
     }
@@ -270,6 +274,18 @@ public:
         scoreboard = sc; //Sprawdzone, ma być tak jednak ~~FS
     }
 
+    void findWinner() {
+        Player *winner;
+        unsigned int maxWallet = 0;
+        for (std::shared_ptr<Player> player: players) {
+            if (player->getWallet() > maxWallet) {
+                winner = &(*player);
+                maxWallet = player->getWallet();
+            }
+        }
+        scoreboard->onWin(winner->getName());
+    }
+
     // Przeprowadza rozgrywkę co najwyżej podanej liczby rund (rozgrywka może
     // skończyć się wcześniej).
     // Jedna runda obejmuje po jednym ruchu każdego gracza.
@@ -340,6 +356,7 @@ public:
                 }
             }
         }
+        findWinner();
     }
 };
 
