@@ -11,320 +11,320 @@ class TooFewPlayersException : std::exception {};
 class TooFewDiceException : std::exception {};
 
 class Player {
-private :
-    std::string const name;
-    size_t currentlyField;
-    unsigned int wallet = 1000;
-    unsigned int state;
-    bool isBankrupt;
-public:
-    Player(std::string const &name) : name(name), isBankrupt(false) {}
+    private :
+        std::string const name;
+        size_t currentlyField;
+        unsigned int wallet = 1000;
+        unsigned int state;
+        bool isBankrupt;
+    public:
+        Player(std::string const &name) : name(name), isBankrupt(false) {}
 
-    bool takeMoney(size_t fee) {
-        if(wallet >= fee){
-            wallet = wallet - fee;
-            return true;
-        } else {
-            setBankrupt();
-            return false;
+        bool takeMoney(size_t fee) {
+            if(wallet >= fee){
+                wallet = wallet - fee;
+                return true;
+            } else {
+                setBankrupt();
+                return false;
+            }
         }
-    }
 
-    void addMoney(double prize) {
-        wallet = wallet + prize;
-    }
-
-    size_t getCurrField() const {
-        return currentlyField;
-    }
-
-    bool skipsTurn() const {
-        return state > 0;
-    }
-
-    void waitOneTurn() {
-        assert(state > 0);
-        state--;
-    }
-
-    bool getIsBankrupt() const {
-        return isBankrupt;
-    }
-
-    void setFine(int fine) {
-        state = fine;
-    }
-
-    void setBankrupt() {
-        isBankrupt = true;
-    }
-
-    void moveOneField(size_t boardSize) {
-        currentlyField = (currentlyField + 1) % boardSize;
-    }
-
-    void writeScore(const std::shared_ptr<ScoreBoard>& scoreBoard, std::string const &fieldName) {
-        if (isBankrupt) {
-            scoreBoard->onTurn(name, "*** bankrut ***", fieldName, 0);
-            return;
+        void addMoney(double prize) {
+            wallet = wallet + prize;
         }
-        if (state > 0) {
-            //czeka ture
-            scoreBoard->onTurn(name, "*** czekanie: " + std::to_string(state) + " ***", fieldName, wallet);
-            return;
+
+        size_t getCurrField() const {
+            return currentlyField;
         }
-        scoreBoard->onTurn(name, "w grze", fieldName, wallet);
-    }
+
+        bool skipsTurn() const {
+            return state > 0;
+        }
+
+        void waitOneTurn() {
+            assert(state > 0);
+            state--;
+        }
+
+        bool getIsBankrupt() const {
+            return isBankrupt;
+        }
+
+        void setFine(int fine) {
+            state = fine;
+        }
+
+        void setBankrupt() {
+            isBankrupt = true;
+        }
+
+        void moveOneField(size_t boardSize) {
+            currentlyField = (currentlyField + 1) % boardSize;
+        }
+
+        void writeScore(const std::shared_ptr<ScoreBoard>& scoreBoard, std::string const &fieldName) {
+            if (isBankrupt) {
+                scoreBoard->onTurn(name, "*** bankrut ***", fieldName, 0);
+                return;
+            }
+            if (state > 0) {
+                //czeka ture
+                scoreBoard->onTurn(name, "*** czekanie: " + std::to_string(state) + " ***", fieldName, wallet);
+                return;
+            }
+            scoreBoard->onTurn(name, "w grze", fieldName, wallet);
+        }
 };
 
 class Field {
-protected:
-    std::string const name;
-    Field(std::string const &name) :
-            name(name) {}
-public:
-    virtual void passingAction(Player player){}
+    protected:
+        std::string const name;
+        Field(std::string const &name) :
+                name(name) {}
+    public:
+        virtual void passingAction(Player player){}
 
-    virtual void landingAction(Player player){}
+        virtual void landingAction(Player player){}
 
-    std::string getName() const {
-        return name;
-    }
+        std::string getName() const {
+            return name;
+        }
 };
 
 class Match : public virtual Field {
-protected:
-    const double weight;
-    const size_t fee;
-    size_t prize;
-public:
-    Match(std::string const &name, double w, size_t f, size_t p):
-            Field(name),
-            weight(w),
-            fee(f),
-            prize(p) {}
+    protected:
+        const double weight;
+        const size_t fee;
+        size_t prize;
+    public:
+        Match(std::string const &name, double w, size_t f, size_t p):
+                Field(name),
+                weight(w),
+                fee(f),
+                prize(p) {}
 
-    void passingAction(Player player) override {
-        if(player.takeMoney(fee)){
-            prize = prize + fee;
+        void passingAction(Player player) override {
+            if(player.takeMoney(fee)){
+                prize = prize + fee;
+            }
         }
-    }
 
-    void landingAction(Player player) override {
-        player.addMoney(prize * weight);
-    }
+        void landingAction(Player player) override {
+            player.addMoney(prize * weight);
+        }
 };
 
 class SeasonBegin : public virtual Field {
-private:
-    size_t passBonus = 50;
-public:
-    SeasonBegin(std::string const &name, size_t pB):
-            Field(name),
-            passBonus(pB) {}
+    private:
+        size_t passBonus = 50;
+    public:
+        SeasonBegin(std::string const &name, size_t pB):
+                Field(name),
+                passBonus(pB) {}
 
-    void passingAction(Player player) override {
-        player.addMoney(passBonus);
-    }
+        void passingAction(Player player) override {
+            player.addMoney(passBonus);
+        }
 
-    void landingAction(Player player) override {
-        // tu się nic nie dzieje chyba
-    }
+        void landingAction(Player player) override {
+            // tu się nic nie dzieje chyba
+        }
 };
 
 class Penalty : public virtual Field {
-private:
-    size_t fee;
-public:
-    Penalty(std::string const &name, size_t f):
-            Field(name),
-            fee(f) {}
+    private:
+        size_t fee;
+    public:
+        Penalty(std::string const &name, size_t f):
+                Field(name),
+                fee(f) {}
 
-    void passingAction(Player player) override {
-        //nic się nie dzieje
-    }
+        void passingAction(Player player) override {
+            //nic się nie dzieje
+        }
 
-    void landingAction(Player player) override {
-        player.takeMoney(fee);
-    }
+        void landingAction(Player player) override {
+            player.takeMoney(fee);
+        }
 };
 
 class Goal : public virtual Field {
-private:
-    size_t prize;
-public:
-    Goal(std::string const &name, size_t p):
-            Field(name),
-            prize(p) {}
+    private:
+        size_t prize;
+    public:
+        Goal(std::string const &name, size_t p):
+                Field(name),
+                prize(p) {}
 
-    void passingAction(Player player) override {
-        // nic się nie dzieje
-    }
+        void passingAction(Player player) override {
+            // nic się nie dzieje
+        }
 
-    void landingAction(Player player) override {
-        player.addMoney(prize);
-    }
+        void landingAction(Player player) override {
+            player.addMoney(prize);
+        }
 };
 
 class YellowCard : public virtual Field {
-private:
-    uint64_t suspension;
-public:
-    YellowCard(std::string const &name, uint64_t susp):
-            Field(name),
-            suspension(susp) {}
+    private:
+        uint64_t suspension;
+    public:
+        YellowCard(std::string const &name, uint64_t susp):
+                Field(name),
+                suspension(susp) {}
 
-    void passingAction(Player player) override {
-        //nic się nie dzieje
-    }
+        void passingAction(Player player) override {
+            //nic się nie dzieje
+        }
 
-    void landingAction(Player player) override {
-        player.setFine(suspension);
-    }
+        void landingAction(Player player) override {
+            player.setFine(suspension);
+        }
 };
 
 class Bookmaker : public virtual Field {
-private:
-    int player_counter = 0;
-    size_t fee;
-    size_t prize;
-    int playerCycle = 3; //nie wiem jak to nazwac =
-public:
-    void passingAction(Player player) override {
-        //nic się nie dzieje
-    }
-
-    void landingAction(Player player) override {
-        if(player_counter % playerCycle == 0){
-            player.addMoney(prize);
-        } else {
-            player.takeMoney(fee);
+    private:
+        int player_counter = 0;
+        size_t fee;
+        size_t prize;
+        int playerCycle = 3; //nie wiem jak to nazwac =
+    public:
+        void passingAction(Player player) override {
+            //nic się nie dzieje
         }
-        ++player_counter;
-    }
+
+        void landingAction(Player player) override {
+            if(player_counter % playerCycle == 0){
+                player.addMoney(prize);
+            } else {
+                player.takeMoney(fee);
+            }
+            ++player_counter;
+        }
 };
 
 class Board {
-private:
-    std::vector<Field> fields;
-public:
-    size_t size() {
-        return fields.size();
-    }
+    private:
+        std::vector<Field> fields;
+    public:
+        size_t size() {
+            return fields.size();
+        }
 
-    Field operator[] (size_t i) {
-        return fields[i];
-    }
+        Field operator[] (size_t i) {
+            return fields[i];
+        }
 };
 
 class WorldCup2022 : public WorldCup {
-private :
-    std::vector<Player> players; //chcesz cykliczną listę, nie wiem nie do końca o co chodzi
-    std::shared_ptr<ScoreBoard> scoreboard;
-    std::vector<std::shared_ptr<Die>> dices;
-    Board board;
-public:
-    //trzeba napisać swój deskturktor, żeby odpiąć die i ScoreBoard
-    // jeżeli jestem jedynym właścicielm share_pointera to również usuwam
-    // nie umiem poprawnie wywołać destruktor, potem poprawię
-    WorldCup2022() {
-        if(scoreboard.unique()){
-            // gameScoreboard.~Scoreboard();
-            scoreboard.reset();
-        }
-        for (auto &dice : dices){
-            if(dice.unique()) {
-                //gameDie.~die();
-                // ?! Mieliśmy nie wywoływać jawnie destruktorów co tu się dzieje?
-                //przecież wystarczy że stracisz wskaźnik na to skoro to jest sharedptr i to się samo usunie
-                //i swoją drogą nie wiem co tu chcesz uzyskać
-                dice.reset();
+    private :
+        std::vector<Player> players; //chcesz cykliczną listę, nie wiem nie do końca o co chodzi
+        std::shared_ptr<ScoreBoard> scoreboard;
+        std::vector<std::shared_ptr<Die>> dices;
+        Board board;
+    public:
+        //trzeba napisać swój deskturktor, żeby odpiąć die i ScoreBoard
+        // jeżeli jestem jedynym właścicielm share_pointera to również usuwam
+        // nie umiem poprawnie wywołać destruktor, potem poprawię
+        WorldCup2022() {
+            if(scoreboard.unique()){
+                // gameScoreboard.~Scoreboard();
+                scoreboard.reset();
+            }
+            for (auto &dice : dices){
+                if(dice.unique()) {
+                    //gameDie.~die();
+                    // ?! Mieliśmy nie wywoływać jawnie destruktorów co tu się dzieje?
+                    //przecież wystarczy że stracisz wskaźnik na to skoro to jest sharedptr i to się samo usunie
+                    //i swoją drogą nie wiem co tu chcesz uzyskać
+                    dice.reset();
+                }
             }
         }
-    }
 
-    // Jeżeli argumentem jest pusty wskaźnik, to nie wykonuje żadnej operacji
-    // (ale nie ma błędu).
-    void addDie(std::shared_ptr<Die> die){
-        if (die == nullptr) {
-            return;
-        }
-        dices.push_back(die);
-    }
-
-    // Dodaje nowego gracza o podanej nazwie.
-    void addPlayer(std::string const &name){
-        Player * playerPtr = new Player(name);
-        players.push_back(*playerPtr); //Troche na około i będzie to trzeba czyścić
-        //Ale chyba twoja wersja nie działałaby
-    }
-
-    // Konfiguruje tablicę wyników. Domyślnie jest skonfigurowana tablica
-    // wyników, która nic nie robi.
-    /*
-        każda gra będzie miała jeden scoreboard ?, więc mogę go chyba przepisać
-        nie będzie dwóch gier które maja tego samego scoreboarda.
-        Jeżeli jednak tak będzie to nie wiem w sumie co z tym zrobić, jakiego typu chcemy trzymać scoreboard ?
-    */
-    void setScoreBoard(std::shared_ptr<ScoreBoard> sc) {
-        scoreboard = std::shared_ptr<ScoreBoard>(sc.get());
-    }
-
-    // Przeprowadza rozgrywkę co najwyżej podanej liczby rund (rozgrywka może
-    // skończyć się wcześniej).
-    // Jedna runda obejmuje po jednym ruchu każdego gracza.
-    // Gracze ruszają się w kolejności, w której zostali dodani.
-    // Na początku każdej rundy przekazywana jest informacja do tablicy wyników
-    // o początku rundy (onRound), a na zakończenie tury gracza informacje
-    // podsumowujące dla każdego gracza (onTurn).
-    // Rzuca TooManyDiceException, jeśli jest zbyt dużo kostek.
-    // Rzuca TooFewDiceException, jeśli nie ma wystarczającej liczby kostek.
-    // Rzuca TooManyPlayersException, jeśli jest zbyt dużo graczy.
-    // Rzuca TooFewPlayersException, jeśli liczba graczy nie pozwala na
-    // rozpoczęcie gry.
-    // Wyjątki powinny dziedziczyć po std::exception.
-    void play(unsigned int rounds) {
-        if (players.size() < 2) {
-            throw TooFewPlayersException();
-        } else if (players.size() > 11) {
-            throw TooManyPlayersException();
+        // Jeżeli argumentem jest pusty wskaźnik, to nie wykonuje żadnej operacji
+        // (ale nie ma błędu).
+        void addDie(std::shared_ptr<Die> die){
+            if (die == nullptr) {
+                return;
+            }
+            dices.push_back(die);
         }
 
-        if (dices.size() < 2) {
-            throw TooFewDiceException();
-        } else if (dices.size() > 2) {
-            throw TooManyDiceException();
+        // Dodaje nowego gracza o podanej nazwie.
+        void addPlayer(std::string const &name){
+            Player * playerPtr = new Player(name);
+            players.push_back(*playerPtr); //Troche na około i będzie to trzeba czyścić
+            //Ale chyba twoja wersja nie działałaby
         }
 
-        //poprawnie wszystko można grać
-        for (unsigned int roundNo = 0; roundNo < rounds; roundNo++) {
-            scoreboard->onRound(roundNo);
-            for (Player player : players) {
-                //czeka
-                if (player.skipsTurn()) {
-                    player.waitOneTurn();
-                } else if (!player.getIsBankrupt()) {
-                    //gra
-                    unsigned int roll = 0;
-                    for (const std::shared_ptr<Die>& die: dices) {
-                        roll += die->roll();
-                    }
-                    for (size_t i = 1; i <= roll - 1; i++) {
-                        player.moveOneField(board.size());
-                        board[player.getCurrField()].passingAction(player);
-                        if (player.getIsBankrupt()) {
-                            break;
+        // Konfiguruje tablicę wyników. Domyślnie jest skonfigurowana tablica
+        // wyników, która nic nie robi.
+        /*
+            każda gra będzie miała jeden scoreboard ?, więc mogę go chyba przepisać
+            nie będzie dwóch gier które maja tego samego scoreboarda.
+            Jeżeli jednak tak będzie to nie wiem w sumie co z tym zrobić, jakiego typu chcemy trzymać scoreboard ?
+        */
+        void setScoreBoard(std::shared_ptr<ScoreBoard> sc) {
+            scoreboard = std::shared_ptr<ScoreBoard>(sc.get());
+        }
+
+        // Przeprowadza rozgrywkę co najwyżej podanej liczby rund (rozgrywka może
+        // skończyć się wcześniej).
+        // Jedna runda obejmuje po jednym ruchu każdego gracza.
+        // Gracze ruszają się w kolejności, w której zostali dodani.
+        // Na początku każdej rundy przekazywana jest informacja do tablicy wyników
+        // o początku rundy (onRound), a na zakończenie tury gracza informacje
+        // podsumowujące dla każdego gracza (onTurn).
+        // Rzuca TooManyDiceException, jeśli jest zbyt dużo kostek.
+        // Rzuca TooFewDiceException, jeśli nie ma wystarczającej liczby kostek.
+        // Rzuca TooManyPlayersException, jeśli jest zbyt dużo graczy.
+        // Rzuca TooFewPlayersException, jeśli liczba graczy nie pozwala na
+        // rozpoczęcie gry.
+        // Wyjątki powinny dziedziczyć po std::exception.
+        void play(unsigned int rounds) {
+            if (players.size() < 2) {
+                throw TooFewPlayersException();
+            } else if (players.size() > 11) {
+                throw TooManyPlayersException();
+            }
+
+            if (dices.size() < 2) {
+                throw TooFewDiceException();
+            } else if (dices.size() > 2) {
+                throw TooManyDiceException();
+            }
+
+            //poprawnie wszystko można grać
+            for (unsigned int roundNo = 0; roundNo < rounds; roundNo++) {
+                scoreboard->onRound(roundNo);
+                for (Player player : players) {
+                    //czeka
+                    if (player.skipsTurn()) {
+                        player.waitOneTurn();
+                    } else if (!player.getIsBankrupt()) {
+                        //gra
+                        unsigned int roll = 0;
+                        for (const std::shared_ptr<Die>& die: dices) {
+                            roll += die->roll();
+                        }
+                        for (size_t i = 1; i <= roll - 1; i++) {
+                            player.moveOneField(board.size());
+                            board[player.getCurrField()].passingAction(player);
+                            if (player.getIsBankrupt()) {
+                                break;
+                            }
+                        }
+                        if (!player.getIsBankrupt()) {
+                            player.moveOneField(board.size());
+                            board[player.getCurrField()].landingAction(player);
                         }
                     }
-                    if (!player.getIsBankrupt()) {
-                        player.moveOneField(board.size());
-                        board[player.getCurrField()].landingAction(player);
-                    }
+                    player.writeScore(scoreboard, board[player.getCurrField()].getName());
                 }
-                player.writeScore(scoreboard, board[player.getCurrField()].getName());
             }
         }
-    }
 };
 
 #endif
