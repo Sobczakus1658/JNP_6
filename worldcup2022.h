@@ -132,7 +132,7 @@ class SeasonBegin : public virtual Field {
         }
 
         void landingAction(Player * player) override {
-            // tu się nic nie dzieje chyba
+           player->addMoney(passBonus);
         }
 };
 
@@ -266,18 +266,6 @@ class WorldCup2022 : public WorldCup {
         scoreboard(),
         dices(),
         board() {
-
-            // IMO ten kod nie dość że miał być w destruktrorze, to jeszcze jest obrzydliwy i nie działa:
-//            if(scoreboard.unique()){
-//                // gameScoreboard.~Scoreboard();
-//                scoreboard.reset();
-//            }
-//            for (auto &dice : dices){
-//                if(dice.unique()) {
-//                    //gameDie.~die();
-//                    dice.reset();
-//                }
-//            }
         }
 
         // Jeżeli argumentem jest pusty wskaźnik, to nie wykonuje żadnej operacji
@@ -338,11 +326,16 @@ class WorldCup2022 : public WorldCup {
                         for (const std::shared_ptr<Die>& die: dices) {
                             roll += die->roll();
                         }
+                        std::cout<<player->getName() << roll;
                         for (size_t i = 1; i <= roll - 1; i++) {
                             player->moveOneField(board.size());
                             board[player->getCurrField()]->passingAction(player.get());
                             if (player->getIsBankrupt()) {
                                 ++bankruptNumber;
+                                //player->writeScore(scoreboard, board[player->getCurrField()]->getName());
+                                for(size_t j = i; j <= roll -1; j++) {
+                                    player->moveOneField(board.size());
+                                }
                                 player->writeScore(scoreboard, board[player->getCurrField()]->getName());
                                 break;
                             }
