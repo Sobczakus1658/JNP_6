@@ -98,11 +98,11 @@ class Match : public virtual Field {
         const size_t fee;
         size_t prize;
     public:
-        Match(std::string const &name, double w, size_t f, size_t p):
+        Match(std::string const &name, double w, size_t f):
                 Field(name),
                 weight(w),
                 fee(f),
-                prize(p) {}
+                prize(0) {}
 
         void passingAction(Player * player) override {
             if(player->takeMoney(fee)){
@@ -188,8 +188,14 @@ class Bookmaker : public virtual Field {
         int player_counter = 0;
         size_t fee;
         size_t prize;
-        int playerCycle = 3; //nie wiem jak to nazwac =
+        int playerCycle = 3;
     public:
+
+        Bookmaker(std::string const & name, size_t f, size_t p):
+            Field(name),
+            fee(f),
+            prize(p) {}
+
         void passingAction(Player * player) override {
             //nic się nie dzieje
         }
@@ -204,10 +210,35 @@ class Bookmaker : public virtual Field {
         }
 };
 
+class RestDay : public virtual Field {
+    public:
+        RestDay(std::string const & name):
+            Field(name) {}
+        void landingAction(Player *player) override {}
+        void passingAction(Player *player) override {}
+};
+
 class Board {
     private:
         std::vector< std::shared_ptr<Field> > fields;
     public:
+
+        Board():
+        fields() {
+            fields.push_back(std::make_shared<SeasonBegin>("początek sezonu", 50));
+            fields.push_back(std::make_shared<Match>("mecz z San Marino", 1, 160));
+            fields.push_back(std::make_shared<RestDay>("dzień wolny od treningu"));
+            fields.push_back(std::make_shared<Match>("mecz z Lichtenstainem", 1, 220));
+            fields.push_back(std::make_shared<YellowCard>("żółta kartka", 3));
+            fields.push_back(std::make_shared<Match>("mecz z Meksykiem", 2.5, 300));
+            fields.push_back(std::make_shared<Match>("mecz z Arabią Saudyjską", 2.5, 280));
+            fields.push_back(std::make_shared<Bookmaker>("bukmacher", 100, 100));
+            fields.push_back(std::make_shared<Match>("mecz z Argentyną", 2.5, 280));
+            fields.push_back(std::make_shared<Goal>("gol", 120));
+            fields.push_back(std::make_shared<Penalty>("rzut karny", 180));
+
+        }
+
         size_t size() const {
             return fields.size();
         }
