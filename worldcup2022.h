@@ -86,9 +86,9 @@ protected:
     Field(std::string const &name) :
             name(name) {}
 public:
-    virtual void passingAction(Player * player){}
+    virtual void passingAction(__attribute__((unused))  Player * player){}
 
-    virtual void landingAction(Player * player){}
+    virtual void landingAction(__attribute__((unused)) Player * player){}
 
     std::string getName() const {
         return name;
@@ -126,7 +126,7 @@ public:
             Field(name),
             passBonus(pB) {}
 
-    void passingAction(Player * player) override {
+    void passingAction(Player * player) override{
         player->addMoney(passBonus);
     }
 
@@ -143,10 +143,6 @@ public:
             Field(name),
             fee(f) {}
 
-    void passingAction(Player * player) override {
-        //nic się nie dzieje
-    }
-
     void landingAction(Player * player) override {
         player->takeMoney(fee);
     }
@@ -160,10 +156,6 @@ public:
             Field(name),
             prize(p) {}
 
-    void passingAction(Player * player) override {
-        // nic się nie dzieje
-    }
-
     void landingAction(Player * player) override {
         player->addMoney(prize);
     }
@@ -176,10 +168,6 @@ public:
     YellowCard(std::string const &name, uint64_t susp):
             Field(name),
             suspension(susp) {}
-
-    void passingAction(Player * player) override {
-        // nic się nie dzieje
-    }
 
     void landingAction(Player * player) override {
         player->setFine(suspension);
@@ -199,10 +187,6 @@ public:
             fee(f),
             prize(p) {}
 
-    void passingAction(Player * player) override {
-        //nic się nie dzieje
-    }
-
     void landingAction(Player * player) override {
         if(playerCounter % playerCycle == 0){
             player->addMoney(prize);
@@ -217,8 +201,6 @@ class RestDay : public virtual Field {
 public:
     RestDay(std::string const & name):
             Field(name) {}
-    void landingAction(Player *player) override {}
-    void passingAction(Player *player) override {}
 };
 
 class Board {
