@@ -2,7 +2,6 @@
 #define WORLDCUP2022_H
 
 #include "worldcup.h"
-#include "list"
 #include <vector>
 
 class TooManyPlayersException : std::exception {};
@@ -13,9 +12,9 @@ class TooFewDiceException : std::exception {};
 class Player {
 private :
     std::string const name;
-    size_t currentlyField;
+    size_t currentlyField = 0;
     unsigned int wallet = 1000;
-    unsigned int state;
+    unsigned int state = 0;
     bool isBankrupt;
 public:
     Player(std::string const &name) : name(name), isBankrupt(false) {}
@@ -314,8 +313,6 @@ public:
         } else if (dices.size() > 2) {
             throw TooManyDiceException();
         }
-
-        //poprawnie wszystko można grać
         for (unsigned int roundNo = 0; roundNo < rounds; roundNo++) {
             scoreboard->onRound(roundNo);
             for (std::shared_ptr<Player> player : players) {
