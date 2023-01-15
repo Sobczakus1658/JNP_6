@@ -21,10 +21,10 @@ private :
     std::string const name;
     size_t currentlyField = 0;
     unsigned int wallet = 1000;
-    unsigned int state = 0;
+    unsigned int state = 0; // 0 gdy jest w grze, n > 0 gdy musi poczekac jeszcze n tur
     bool isBankrupt;
 public:
-    Player(std::string const &name) : name(name), isBankrupt(false) {}
+    explicit Player(std::string const &name) : name(name), isBankrupt(false) {}
 
     bool takeMoney(size_t fee) {
         if (wallet >= fee) {
@@ -37,7 +37,7 @@ public:
     }
 
     void addMoney(double prize) {
-        wallet = wallet + prize;
+        wallet = wallet + (unsigned int) prize;
     }
 
     size_t getCurrField() const {
@@ -57,7 +57,7 @@ public:
         return isBankrupt;
     }
 
-    void setFine(int fine) {
+    void setFine(size_t fine) {
         state = fine;
     }
 
@@ -95,7 +95,7 @@ class Field {
 protected:
     std::string const name;
 
-    Field(std::string const &name) :
+    explicit Field(std::string const &name) :
             name(name) {}
 
 public:
@@ -127,7 +127,7 @@ public:
     }
 
     void landingAction(Player *player) override {
-        player->addMoney(prize * weight);
+        player->addMoney((double) prize * weight);
     }
 };
 
@@ -140,11 +140,11 @@ public:
             passBonus(pB) {}
 
     void passingAction(Player *player) override {
-        player->addMoney(passBonus);
+        player->addMoney((double) passBonus);
     }
 
     void landingAction(Player *player) override {
-        player->addMoney(passBonus);
+        player->addMoney((double) passBonus);
     }
 };
 
@@ -170,7 +170,7 @@ public:
             prize(p) {}
 
     void landingAction(Player *player) override {
-        player->addMoney(prize);
+        player->addMoney((double) prize);
     }
 };
 
@@ -202,7 +202,7 @@ public:
 
     void landingAction(Player *player) override {
         if (playerCounter % playerCycle == 0) {
-            player->addMoney(prize);
+            player->addMoney((double) prize);
         } else {
             player->takeMoney(fee);
         }
@@ -212,7 +212,7 @@ public:
 
 class RestDay : public virtual Field {
 public:
-    RestDay(std::string const &name) :
+    explicit RestDay(std::string const &name) :
             Field(name) {}
 };
 
@@ -242,7 +242,7 @@ public:
         return fields.size();
     }
 
-    Field *operator[](size_t i) const { //nie jestem jakoś bardzo pewny tego consta jak coś ~~FS
+    Field *operator[](size_t i) const {
         return fields[i].get();
     }
 };
@@ -254,10 +254,14 @@ public:
     Dice() : dice() {}
 
     unsigned short roll() {
-        return dice[0]->roll() + dice[1]->roll();
+        unsigned short ret = 0;
+        for (std::shared_ptr<Die> die : dice) {
+            ret += die->roll();
+        }
+        return ret;
     }
 
-    int getNumberOfDices() const {
+    size_t getNumberOfDices() const {
         return dice.size();
     }
 
@@ -296,7 +300,7 @@ public:
     // Konfiguruje tablicę wyników. Domyślnie jest skonfigurowana tablica
     // wyników, która nic nie robi.
     void setScoreBoard(std::shared_ptr<ScoreBoard> sc) {
-        scoreboard = sc; //Sprawdzone, ma być tak jednak ~~FS
+        scoreboard = sc;
     }
 
     void findWinner() {
@@ -339,7 +343,6 @@ public:
         for (unsigned int roundNo = 0; roundNo < rounds; roundNo++) {
             scoreboard->onRound(roundNo);
             for (const std::shared_ptr<Player> &player: players) {
-                //czeka
                 if (!player->getIsBankrupt() && !player->skipsTurn()) {
                     //gra
                     unsigned int roll = dice->roll();
