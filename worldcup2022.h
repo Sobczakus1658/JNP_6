@@ -26,6 +26,8 @@ private :
 public:
     explicit Player(std::string const &name) : name(name), isBankrupt(false) {}
 
+    // Zakładamy, że jeżeli gracz nie ma wystarczająco pieniędzy,
+    // żeby uiścić zapłatę, to nic nie wpłaca. 
     bool takeMoney(size_t fee) {
         if (wallet >= fee) {
             wallet = wallet - fee;
@@ -99,9 +101,9 @@ protected:
             name(name) {}
 
 public:
-    virtual void passingAction(__attribute__((unused))  Player *player) {}
+    virtual void passingAction([[maybe_unused]] Player *player) {}
 
-    virtual void landingAction(__attribute__((unused)) Player *player) {}
+    virtual void landingAction([[maybe_unused]] Player *player) {}
 
     std::string getName() const {
         return name;
@@ -233,7 +235,7 @@ public:
         fields.push_back(std::make_shared<Bookmaker>("Bukmacher", 100, 100));
         fields.push_back(std::make_shared<Match>("Mecz z Argentyną", 2.5, 250));
         fields.push_back(std::make_shared<Goal>("Gol", 120));
-        fields.push_back(std::make_shared<Match>("Mecz z Francją", 5, 400));
+        fields.push_back(std::make_shared<Match>("Mecz z Francją", 4, 400));
         fields.push_back(std::make_shared<Penalty>("Rzut karny", 180));
 
     }
@@ -303,6 +305,8 @@ public:
         scoreboard = sc;
     }
 
+    // Zakładamy że po zakończeniu rozgrywki będzie tylko jeden zwycięzca,
+    // nie będzie remisów.
     void findWinner() {
         Player *winner;
         unsigned int maxWallet = 0;
@@ -340,6 +344,8 @@ public:
         } else if (dice->getNumberOfDices() > 2) {
             throw TooManyDiceException();
         }
+        // Zakładamy, że osoba, która zbankrutowała nadal jest w grze,
+        // więc po zakończeniu każdej tury wypisze się, że jest bankrutem.
         for (unsigned int roundNo = 0; roundNo < rounds; roundNo++) {
             scoreboard->onRound(roundNo);
             for (const std::shared_ptr<Player> &player: players) {
@@ -368,6 +374,8 @@ public:
                     player->waitOneTurn();
                 }
 
+                // W sytuacji kiedy tylko jeden gracz nie jest bankrutem,
+                // gra się kończy.
                 if (bankruptNumber == players.size() - 1) {
                     for (const std::shared_ptr<Player> &p: players) {
                         if (!p->getIsBankrupt())
