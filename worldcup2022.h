@@ -351,7 +351,7 @@ public:
                 if (!player->getIsBankrupt() && !player->skipsTurn()) {
                     //gra
                     unsigned int roll = dice->roll();
-                    for (size_t i = 1; i <= roll - 1; i++) {
+                    for (size_t i = 1; i + 1 <= roll; i++) {
                         player->moveOneField(board.size());
                         board[player->getCurrField()]->passingAction(player.get());
                         if (player->getIsBankrupt()) {
@@ -363,7 +363,9 @@ public:
                         }
                     }
                     if (!player->getIsBankrupt()) {
-                        player->moveOneField(board.size());
+                        if(roll != 0) {
+                            player->moveOneField(board.size());
+                        }
                         board[player->getCurrField()]->landingAction(player.get());
                     }
                 }
