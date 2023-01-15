@@ -28,13 +28,13 @@ public:
 
     // Zakładamy, że jeżeli gracz nie ma wystarczająco pieniędzy,
     // żeby uiścić zapłatę, to nic nie wpłaca. 
-    bool takeMoney(size_t fee) {
+    size_t takeMoney(size_t fee) {
         if (wallet >= fee) {
             wallet = wallet - fee;
-            return true;
+            return fee;
         } else {
             setBankrupt();
-            return false;
+            return wallet;
         }
     }
 
@@ -123,9 +123,7 @@ public:
             prize(0) {}
 
     void passingAction(Player *player) override {
-        if (player->takeMoney(fee)) {
-            prize = prize + fee;
-        }
+        prize = prize + player->takeMoney(fee);
     }
 
     void landingAction(Player *player) override {
