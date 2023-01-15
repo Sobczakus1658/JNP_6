@@ -4,16 +4,16 @@
 #include "worldcup.h"
 #include <vector>
 
-class TooManyPlayersException : std::exception {
+class TooManyPlayersException : public std::exception {
 };
 
-class TooManyDiceException : std::exception {
+class TooManyDiceException : public std::exception {
 };
 
-class TooFewPlayersException : std::exception {
+class TooFewPlayersException : public std::exception {
 };
 
-class TooFewDiceException : std::exception {
+class TooFewDiceException : public std::exception {
 };
 
 class Player {
@@ -308,7 +308,7 @@ public:
     // Zakładamy że po zakończeniu rozgrywki będzie tylko jeden zwycięzca,
     // nie będzie remisów.
     void findWinner() {
-        Player *winner;
+        Player *winner = players[0].get();
         unsigned int maxWallet = 0;
         for (const std::shared_ptr<Player> &player: players) {
             if (player->getWallet() > maxWallet) {
@@ -333,17 +333,17 @@ public:
     // rozpoczęcie gry.
     // Wyjątki powinny dziedziczyć po std::exception.
     void play(unsigned int rounds) {
+         if (dice->getNumberOfDices() < 2) {
+             throw TooFewDiceException();
+         } else if (dice->getNumberOfDices() > 2) {
+             throw TooManyDiceException();
+         }
         if (players.size() < 2) {
             throw TooFewPlayersException();
         } else if (players.size() > 11) {
             throw TooManyPlayersException();
         }
 
-        if (dice->getNumberOfDices() < 2) {
-            throw TooFewDiceException();
-        } else if (dice->getNumberOfDices() > 2) {
-            throw TooManyDiceException();
-        }
         // Zakładamy, że osoba, która zbankrutowała nadal jest w grze,
         // więc po zakończeniu każdej tury wypisze się, że jest bankrutem.
         for (unsigned int roundNo = 0; roundNo < rounds; roundNo++) {
