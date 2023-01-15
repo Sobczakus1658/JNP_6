@@ -128,6 +128,7 @@ public:
 
     void landingAction(Player *player) override {
         player->addMoney((double) prize * weight);
+        prize = 0;
     }
 };
 
