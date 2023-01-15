@@ -4,10 +4,17 @@
 #include "worldcup.h"
 #include <vector>
 
-class TooManyPlayersException : std::exception {};
-class TooManyDiceException : std::exception {};
-class TooFewPlayersException : std::exception {};
-class TooFewDiceException : std::exception {};
+class TooManyPlayersException : std::exception {
+};
+
+class TooManyDiceException : std::exception {
+};
+
+class TooFewPlayersException : std::exception {
+};
+
+class TooFewDiceException : std::exception {
+};
 
 class Player {
 private :
@@ -20,7 +27,7 @@ public:
     Player(std::string const &name) : name(name), isBankrupt(false) {}
 
     bool takeMoney(size_t fee) {
-        if(wallet >= fee){
+        if (wallet >= fee) {
             wallet = wallet - fee;
             return true;
         } else {
@@ -70,7 +77,7 @@ public:
         currentlyField = (currentlyField + 1) % boardSize;
     }
 
-    void writeScore(const std::shared_ptr<ScoreBoard>& scoreBoard, std::string const &fieldName) {
+    void writeScore(const std::shared_ptr<ScoreBoard> &scoreBoard, std::string const &fieldName) {
         if (isBankrupt) {
             scoreBoard->onTurn(name, "*** bankrut ***", fieldName, 0);
             return;
@@ -87,12 +94,14 @@ public:
 class Field {
 protected:
     std::string const name;
+
     Field(std::string const &name) :
             name(name) {}
-public:
-    virtual void passingAction(__attribute__((unused))  Player * player){}
 
-    virtual void landingAction(__attribute__((unused)) Player * player){}
+public:
+    virtual void passingAction(__attribute__((unused))  Player *player) {}
+
+    virtual void landingAction(__attribute__((unused)) Player *player) {}
 
     std::string getName() const {
         return name;
@@ -105,19 +114,19 @@ protected:
     const size_t fee;
     size_t prize;
 public:
-    Match(std::string const &name, double w, size_t f):
+    Match(std::string const &name, double w, size_t f) :
             Field(name),
             weight(w),
             fee(f),
             prize(0) {}
 
-    void passingAction(Player * player) override {
-        if(player->takeMoney(fee)){
+    void passingAction(Player *player) override {
+        if (player->takeMoney(fee)) {
             prize = prize + fee;
         }
     }
 
-    void landingAction(Player * player) override {
+    void landingAction(Player *player) override {
         player->addMoney(prize * weight);
     }
 };
@@ -126,15 +135,15 @@ class SeasonBegin : public virtual Field {
 private:
     size_t passBonus;
 public:
-    SeasonBegin(std::string const &name, size_t pB):
+    SeasonBegin(std::string const &name, size_t pB) :
             Field(name),
             passBonus(pB) {}
 
-    void passingAction(Player * player) override{
+    void passingAction(Player *player) override {
         player->addMoney(passBonus);
     }
 
-    void landingAction(Player * player) override {
+    void landingAction(Player *player) override {
         player->addMoney(passBonus);
     }
 };
@@ -143,11 +152,11 @@ class Penalty : public virtual Field {
 private:
     size_t fee;
 public:
-    Penalty(std::string const &name, size_t f):
+    Penalty(std::string const &name, size_t f) :
             Field(name),
             fee(f) {}
 
-    void landingAction(Player * player) override {
+    void landingAction(Player *player) override {
         player->takeMoney(fee);
     }
 };
@@ -156,11 +165,11 @@ class Goal : public virtual Field {
 private:
     size_t prize;
 public:
-    Goal(std::string const &name, size_t p):
+    Goal(std::string const &name, size_t p) :
             Field(name),
             prize(p) {}
 
-    void landingAction(Player * player) override {
+    void landingAction(Player *player) override {
         player->addMoney(prize);
     }
 };
@@ -169,11 +178,11 @@ class YellowCard : public virtual Field {
 private:
     uint64_t suspension;
 public:
-    YellowCard(std::string const &name, uint64_t susp):
+    YellowCard(std::string const &name, uint64_t susp) :
             Field(name),
             suspension(susp) {}
 
-    void landingAction(Player * player) override {
+    void landingAction(Player *player) override {
         player->setFine(suspension);
     }
 };
@@ -186,13 +195,13 @@ private:
     int playerCycle = 3;
 public:
 
-    Bookmaker(std::string const & name, size_t f, size_t p):
+    Bookmaker(std::string const &name, size_t f, size_t p) :
             Field(name),
             fee(f),
             prize(p) {}
 
-    void landingAction(Player * player) override {
-        if(playerCounter % playerCycle == 0){
+    void landingAction(Player *player) override {
+        if (playerCounter % playerCycle == 0) {
             player->addMoney(prize);
         } else {
             player->takeMoney(fee);
@@ -203,16 +212,16 @@ public:
 
 class RestDay : public virtual Field {
 public:
-    RestDay(std::string const & name):
+    RestDay(std::string const &name) :
             Field(name) {}
 };
 
 class Board {
 private:
-    std::vector< std::shared_ptr<Field> > fields;
+    std::vector<std::shared_ptr<Field> > fields;
 public:
 
-    Board():
+    Board() :
             fields() {
         fields.push_back(std::make_shared<SeasonBegin>("Początek sezonu", 50));
         fields.push_back(std::make_shared<Match>("Mecz z San Marino", 1, 160));
@@ -233,8 +242,32 @@ public:
         return fields.size();
     }
 
-    Field * operator[] (size_t i) const { //nie jestem jakoś bardzo pewny tego consta jak coś ~~FS
+    Field *operator[](size_t i) const { //nie jestem jakoś bardzo pewny tego consta jak coś ~~FS
         return fields[i].get();
+    }
+};
+
+class Dice {
+private:
+    std::vector<std::shared_ptr<Die>> dice;
+public:
+    Dice() : dice() {}
+
+    unsigned short roll() {
+        return dice[0]->roll() + dice[1]->roll();
+    }
+
+    int getNumberOfDices() const {
+        return dice.size();
+    }
+
+    // Jeżeli argumentem jest pusty wskaźnik, to nie wykonuje żadnej operacji
+    // (ale nie ma błędu).
+    void addDie(std::shared_ptr<Die> die) {
+        if (!die) {
+            return;
+        }
+        dice.push_back(die);
     }
 };
 
@@ -242,30 +275,22 @@ class WorldCup2022 : public WorldCup {
 private :
     std::vector<std::shared_ptr<Player>> players;
     std::shared_ptr<ScoreBoard> scoreboard;
-    std::vector<std::shared_ptr<Die>> dices;
+    std::shared_ptr<Dice> dice;
     size_t bankruptNumber = 0;
     Board board;
 public:
-    WorldCup2022():
-            players(),
-            scoreboard(),
-            dices(),
-            board() {
-    }
-
-    // Jeżeli argumentem jest pusty wskaźnik, to nie wykonuje żadnej operacji
-    // (ale nie ma błędu).
-    void addDie(std::shared_ptr<Die> die) {
-        if (die == nullptr) {
-            return;
-        }
-        dices.push_back(die);
+    WorldCup2022() {
+        dice = std::make_shared<Dice>(Dice());
     }
 
     // Dodaje nowego gracza o podanej nazwie.
-    void addPlayer(std::string const &name){
+    void addPlayer(std::string const &name) {
         std::shared_ptr<Player> playerPtr = std::make_shared<Player>(name);
         players.push_back(playerPtr);
+    }
+
+    void addDie(std::shared_ptr<Die> die) {
+        dice->addDie(die);
     }
 
     // Konfiguruje tablicę wyników. Domyślnie jest skonfigurowana tablica
@@ -277,7 +302,7 @@ public:
     void findWinner() {
         Player *winner;
         unsigned int maxWallet = 0;
-        for (std::shared_ptr<Player> player: players) {
+        for (const std::shared_ptr<Player> &player: players) {
             if (player->getWallet() > maxWallet) {
                 winner = &(*player);
                 maxWallet = player->getWallet();
@@ -306,30 +331,26 @@ public:
             throw TooManyPlayersException();
         }
 
-        if (dices.size() < 2) {
+        if (dice->getNumberOfDices() < 2) {
             throw TooFewDiceException();
-        } else if (dices.size() > 2) {
+        } else if (dice->getNumberOfDices() > 2) {
             throw TooManyDiceException();
         }
         for (unsigned int roundNo = 0; roundNo < rounds; roundNo++) {
             scoreboard->onRound(roundNo);
-            for (std::shared_ptr<Player> player : players) {
+            for (const std::shared_ptr<Player> &player: players) {
                 //czeka
                 if (!player->getIsBankrupt() && !player->skipsTurn()) {
                     //gra
-                    unsigned int roll = 0;
-                    for (const std::shared_ptr<Die>& die: dices) {
-                        roll += die->roll();
-                    }
+                    unsigned int roll = dice->roll();
                     for (size_t i = 1; i <= roll - 1; i++) {
                         player->moveOneField(board.size());
                         board[player->getCurrField()]->passingAction(player.get());
                         if (player->getIsBankrupt()) {
                             ++bankruptNumber;
-                            for(size_t j = i; j <= roll -1; j++) {
+                            for (size_t j = i; j <= roll - 1; j++) {
                                 player->moveOneField(board.size());
                             }
-                            player->writeScore(scoreboard, board[player->getCurrField()]->getName());
                             break;
                         }
                     }
@@ -338,17 +359,14 @@ public:
                         board[player->getCurrField()]->landingAction(player.get());
                     }
                 }
-
-                if (!player->getIsBankrupt()) {
-                    player->writeScore(scoreboard, board[player->getCurrField()]->getName());
-                }
+                player->writeScore(scoreboard, board[player->getCurrField()]->getName());
 
                 if (player->skipsTurn()) {
                     player->waitOneTurn();
                 }
 
                 if (bankruptNumber == players.size() - 1) {
-                    for (std::shared_ptr<Player> p : players) {
+                    for (const std::shared_ptr<Player> &p: players) {
                         if (!p->getIsBankrupt())
                             scoreboard->onWin(p->getName());
                     }
