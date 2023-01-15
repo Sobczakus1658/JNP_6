@@ -25,6 +25,7 @@ private :
     bool isBankrupt;
 public:
     explicit Player(std::string const &name) : name(name), isBankrupt(false) {}
+
     size_t takeMoney(size_t fee) {
         if (wallet >= fee) {
             wallet = wallet - fee;
@@ -76,7 +77,7 @@ public:
         currentlyField = (currentlyField + 1) % boardSize;
     }
 
-    void writeScore(const std::shared_ptr<ScoreBoard> &scoreBoard, std::string const &fieldName) {
+    void writeScore(const std::shared_ptr <ScoreBoard> &scoreBoard, std::string const &fieldName) {
         if (isBankrupt) {
             scoreBoard->onTurn(name, "*** bankrut ***", fieldName, 0);
             return;
@@ -216,7 +217,7 @@ public:
 
 class Board {
 private:
-    std::vector<std::shared_ptr<Field> > fields;
+    std::vector <std::shared_ptr<Field>> fields;
 public:
 
     Board() :
@@ -247,13 +248,13 @@ public:
 
 class Dice {
 private:
-    std::vector<std::shared_ptr<Die>> dice;
+    std::vector <std::shared_ptr<Die>> dice;
 public:
     Dice() : dice() {}
 
     unsigned short roll() {
         unsigned short ret = 0;
-        for (std::shared_ptr<Die> die : dice) {
+        for (std::shared_ptr <Die> die: dice) {
             ret += die->roll();
         }
         return ret;
@@ -265,7 +266,7 @@ public:
 
     // Jeżeli argumentem jest pusty wskaźnik, to nie wykonuje żadnej operacji
     // (ale nie ma błędu).
-    void addDie(std::shared_ptr<Die> die) {
+    void addDie(std::shared_ptr <Die> die) {
         if (!die) {
             return;
         }
@@ -275,9 +276,9 @@ public:
 
 class WorldCup2022 : public WorldCup {
 private :
-    std::vector<std::shared_ptr<Player>> players;
-    std::shared_ptr<ScoreBoard> scoreboard;
-    std::shared_ptr<Dice> dice;
+    std::vector <std::shared_ptr<Player>> players;
+    std::shared_ptr <ScoreBoard> scoreboard;
+    std::shared_ptr <Dice> dice;
     size_t bankruptNumber = 0;
     Board board;
 public:
@@ -287,17 +288,17 @@ public:
 
     // Dodaje nowego gracza o podanej nazwie.
     void addPlayer(std::string const &name) {
-        std::shared_ptr<Player> playerPtr = std::make_shared<Player>(name);
+        std::shared_ptr <Player> playerPtr = std::make_shared<Player>(name);
         players.push_back(playerPtr);
     }
 
-    void addDie(std::shared_ptr<Die> die) {
+    void addDie(std::shared_ptr <Die> die) {
         dice->addDie(die);
     }
 
     // Konfiguruje tablicę wyników. Domyślnie jest skonfigurowana tablica
     // wyników, która nic nie robi.
-    void setScoreBoard(std::shared_ptr<ScoreBoard> sc) {
+    void setScoreBoard(std::shared_ptr <ScoreBoard> sc) {
         scoreboard = sc;
     }
 
@@ -305,11 +306,9 @@ public:
     // nie będzie remisów.
     void findWinner() {
         Player *winner = players[0].get();
-        unsigned int maxWallet = 0;
-        for (const std::shared_ptr<Player> &player: players) {
-            if (player->getWallet() > maxWallet) {
-                winner = &(*player);
-                maxWallet = player->getWallet();
+        for (const std::shared_ptr <Player> &player: players) {
+            if (player->getWallet() > winner->getWallet()) {
+                winner = player.get();
             }
         }
         scoreboard->onWin(winner->getName());
@@ -329,11 +328,11 @@ public:
     // rozpoczęcie gry.
     // Wyjątki powinny dziedziczyć po std::exception.
     void play(unsigned int rounds) {
-         if (dice->getNumberOfDices() < 2) {
-             throw TooFewDiceException();
-         } else if (dice->getNumberOfDices() > 2) {
-             throw TooManyDiceException();
-         }
+        if (dice->getNumberOfDices() < 2) {
+            throw TooFewDiceException();
+        } else if (dice->getNumberOfDices() > 2) {
+            throw TooManyDiceException();
+        }
         if (players.size() < 2) {
             throw TooFewPlayersException();
         } else if (players.size() > 11) {
@@ -344,7 +343,7 @@ public:
         // więc po zakończeniu każdej tury wypisze się, że jest bankrutem.
         for (unsigned int roundNo = 0; roundNo < rounds; roundNo++) {
             scoreboard->onRound(roundNo);
-            for (const std::shared_ptr<Player> &player: players) {
+            for (const std::shared_ptr <Player> &player: players) {
                 if (!player->getIsBankrupt() && !player->skipsTurn()) {
                     //gra
                     unsigned int roll = dice->roll();
@@ -360,7 +359,7 @@ public:
                         }
                     }
                     if (!player->getIsBankrupt()) {
-                        if(roll != 0) {
+                        if (roll != 0) {
                             player->moveOneField(board.size());
                         }
                         board[player->getCurrField()]->landingAction(player.get());
@@ -375,7 +374,7 @@ public:
                 // W sytuacji kiedy tylko jeden gracz nie jest bankrutem,
                 // gra się kończy.
                 if (bankruptNumber == players.size() - 1) {
-                    for (const std::shared_ptr<Player> &p: players) {
+                    for (const std::shared_ptr <Player> &p: players) {
                         if (!p->getIsBankrupt())
                             scoreboard->onWin(p->getName());
                     }
