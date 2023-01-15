@@ -25,9 +25,6 @@ private :
     bool isBankrupt;
 public:
     explicit Player(std::string const &name) : name(name), isBankrupt(false) {}
-
-    // Zakładamy, że jeżeli gracz nie ma wystarczająco pieniędzy,
-    // żeby uiścić zapłatę, to nic nie wpłaca. 
     size_t takeMoney(size_t fee) {
         if (wallet >= fee) {
             wallet = wallet - fee;
